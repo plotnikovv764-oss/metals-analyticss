@@ -4,8 +4,8 @@ import DemoBadge from '@/components/common/DemoBadge';
 import Panel from '@/components/common/Panel';
 import ChatBubble, { type ChatMessage } from '@/components/ai/ChatBubble';
 import PageHeader from '@/components/layout/PageHeader';
-import { buildDemoReply } from '@/lib/analyst';
 import { cn } from '@/lib/cn';
+import { sendAiRequest } from '@/services/ai';
 
 const SUGGESTIONS = [
   'Сравни Neodymium и Praseodymium',
@@ -32,15 +32,31 @@ export default function AiAnalystPage({ updatedAt }: AiAnalystPageProps) {
 
   useEffect(() => {
     if (!pendingQuestion) return;
+    let cancelled = false;
     const timer = setTimeout(() => {
-      const reply = buildDemoReply(pendingQuestion, updatedAt);
-      setMessages((current) => [
-        ...current,
-        { id: `reply-${Date.now()}`, role: 'assistant', text: reply.text, quotes: reply.quotes },
-      ]);
-      setPendingQuestion(null);
+      sendAiRequest({ question: pendingQuestion }, updatedAt)
+        .then((reply) => {
+          if (cancelled) return;
+          setMessages((current) => [
+            ...current,
+            { id: `reply-${Date.now()}`, role: 'assistant', text: reply.text, quotes: reply.quotes },
+          ]);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setMessages((current) => [
+            ...current,
+            { id: `error-${Date.now()}`, role: 'assistant', text: 'Не удалось получить ответ. Попробуйте позже.' },
+          ]);
+        })
+        .finally(() => {
+          if (!cancelled) setPendingQuestion(null);
+        });
     }, 700);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [pendingQuestion, updatedAt]);
 
   useEffect(() => {

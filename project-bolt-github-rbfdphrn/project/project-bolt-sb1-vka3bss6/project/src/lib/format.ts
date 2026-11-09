@@ -13,6 +13,7 @@ const AXIS_OPTIONS: Record<PeriodKey, Intl.DateTimeFormatOptions> = {
   '1M': { day: '2-digit', month: '2-digit' },
   '3M': { day: '2-digit', month: '2-digit' },
   '1Y': { month: 'short', year: '2-digit' },
+  '5Y': { month: 'short', year: '2-digit' },
 };
 
 export function formatPrice(value: number): string {

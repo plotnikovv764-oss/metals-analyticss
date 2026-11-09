@@ -41,3 +41,5 @@ export function useFavorites() {
 
   return { favorites, toggleFavorite, isFavorite };
 }
+
+export type FavoritesState = ReturnType<typeof useFavorites>;

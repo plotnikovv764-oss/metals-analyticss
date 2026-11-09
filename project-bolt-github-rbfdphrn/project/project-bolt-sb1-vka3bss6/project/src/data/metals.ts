@@ -180,7 +180,7 @@ export const METALS: Metal[] = [
     priceFactors: ['Добыча в Китае (80% рынка)', 'Спрос металлообработки', 'Экспортные квоты', 'Геополитика'],
   },
   {
-    id: 'rhenium', symbol: 'Re', name: 'Rhenium', nameRu: 'Рений', aliases: ['рений',рения'],
+    id: 'rhenium', symbol: 'Re', name: 'Rhenium', nameRu: 'Рений', aliases: ['рений', 'рения'],
     atomicNumber: 75, categoryId: 'rare-strategic', basePrice: 1200, volatility: 0.03, trend: 0.0002,
     unit: 'kg', currency: 'USD',
     description: 'Один из редчайших металлов, критичный для лопаток турбин авиадвигателей.',

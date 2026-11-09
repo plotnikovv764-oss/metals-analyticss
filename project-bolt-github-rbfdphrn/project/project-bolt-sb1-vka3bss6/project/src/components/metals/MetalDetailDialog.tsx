@@ -1,17 +1,22 @@
 import { useEffect, useId, useMemo, useState } from 'react';
-import { X } from 'lucide-react';
+import { Star, X } from 'lucide-react';
 import Delta from '@/components/common/Delta';
 import DemoBadge from '@/components/common/DemoBadge';
 import PeriodSwitcher from '@/components/common/PeriodSwitcher';
 import PriceChart from '@/components/charts/PriceChart';
+import PriceConverter from '@/components/metals/PriceConverter';
+import { CATEGORY_MAP } from '@/data/categories';
 import { formatDateTime, formatPercent, formatPrice, formatPriceChange } from '@/lib/format';
-import { buildQuote } from '@/lib/market';
+import { buildQuote } from '@/services/market';
+import { cn } from '@/lib/cn';
 import type { Metal, PeriodKey } from '@/types/market';
 
 interface MetalDetailDialogProps {
   metal: Metal;
   initialPeriod: PeriodKey;
   updatedAt: Date;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
   onClose: () => void;
 }
 
@@ -19,6 +24,8 @@ export default function MetalDetailDialog({
   metal,
   initialPeriod,
   updatedAt,
+  isFavorite,
+  onToggleFavorite,
   onClose,
 }: MetalDetailDialogProps) {
   const [period, setPeriod] = useState<PeriodKey>(initialPeriod);
@@ -42,8 +49,8 @@ export default function MetalDetailDialog({
 
   const specs = [
     { label: 'Символ', value: metal.symbol },
-    { label: 'Атомный номер', value: String(metal.atomicNumber) },
-    { label: 'Группа', value: metal.group },
+    { label: 'Атомный номер', value: metal.atomicNumber === null ? '—' : String(metal.atomicNumber) },
+    { label: 'Категория', value: CATEGORY_MAP[metal.categoryId].name },
     { label: 'Единица измерения', value: 'USD за кг' },
   ];
 
@@ -70,16 +77,30 @@ export default function MetalDetailDialog({
                 {metal.symbol}
               </span>
             </div>
-            <p className="mt-1 text-sm text-ink-400">{metal.group}</p>
+            <p className="mt-1 text-sm text-ink-400">{CATEGORY_MAP[metal.categoryId].name}</p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Закрыть карточку"
-            className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-800 hover:text-ink-100"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={onToggleFavorite}
+              aria-pressed={isFavorite}
+              aria-label={isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
+              className={cn(
+                'rounded-lg p-2 transition-colors hover:bg-ink-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40',
+                isFavorite ? 'text-brand-400' : 'text-ink-400 hover:text-ink-100'
+              )}
+            >
+              <Star className="h-5 w-5" fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Закрыть карточку"
+              className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-800 hover:text-ink-100"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         <div className="space-y-6 p-5 md:p-6">
@@ -122,6 +143,8 @@ export default function MetalDetailDialog({
               </div>
             ))}
           </div>
+
+          <PriceConverter pricePerKg={quote.price} currency={metal.currency} />
 
           <div>
             <h3 className="mb-2 text-sm font-medium text-ink-200">Характеристики котировки</h3>

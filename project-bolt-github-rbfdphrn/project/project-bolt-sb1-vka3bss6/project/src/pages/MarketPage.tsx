@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Download } from 'lucide-react';
 import Delta from '@/components/common/Delta';
 import DemoBadge from '@/components/common/DemoBadge';
 import LastUpdated from '@/components/common/LastUpdated';
@@ -13,14 +14,17 @@ import QuotesTable from '@/components/market/QuotesTable';
 import MetalDetailDialog from '@/components/metals/MetalDetailDialog';
 import { METALS } from '@/data/metals';
 import { formatIndex, formatPercent } from '@/lib/format';
-import { buildIndex, buildQuotes } from '@/lib/market';
+import type { FavoritesState } from '@/hooks/useFavorites';
+import { buildQuotesCsv, downloadCsv } from '@/services/export';
+import { buildIndex, buildQuotes } from '@/services/market';
 import type { Metal, PeriodKey } from '@/types/market';
 
 interface MarketPageProps {
   updatedAt: Date;
+  favorites: FavoritesState;
 }
 
-export default function MarketPage({ updatedAt }: MarketPageProps) {
+export default function MarketPage({ updatedAt, favorites }: MarketPageProps) {
   const [period, setPeriod] = useState<PeriodKey>('1M');
   const [query, setQuery] = useState('');
   const [selectedMetal, setSelectedMetal] = useState<Metal | null>(null);
@@ -49,7 +53,7 @@ export default function MarketPage({ updatedAt }: MarketPageProps) {
     <>
       <PageHeader
         title="Обзор рынка"
-        description="Ключевые показатели и котировки редкоземельных металлов за выбранный период."
+        description="Ключевые показатели и котировки металлов, сплавов и лома за выбранный период."
         actions={
           <>
             <DemoBadge />
@@ -118,16 +122,34 @@ export default function MarketPage({ updatedAt }: MarketPageProps) {
             </div>
             <p className="mt-1 text-xs text-ink-400">Нажмите на металл, чтобы открыть карточку</p>
           </div>
-          <SearchInput
-            value={query}
-            onChange={setQuery}
-            placeholder="Поиск металлов"
-            className="md:w-72"
-          />
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <SearchInput
+              value={query}
+              onChange={setQuery}
+              placeholder="Поиск металлов"
+              className="md:w-72"
+            />
+            <button
+              type="button"
+              onClick={() =>
+                downloadCsv(
+                  `alpha-market-${period}-${updatedAt.toISOString().slice(0, 10)}.csv`,
+                  buildQuotesCsv(visibleQuotes, period, updatedAt)
+                )
+              }
+              disabled={visibleQuotes.length === 0}
+              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-ink-700 bg-ink-950 px-4 text-sm text-ink-200 transition-colors duration-200 hover:border-brand-500/40 hover:text-brand-400 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+              Экспорт CSV
+            </button>
+          </div>
         </div>
         <QuotesTable
           quotes={visibleQuotes}
           emptyText={`Ничего не найдено по запросу «${query.trim()}»`}
+          isFavorite={favorites.isFavorite}
+          onToggleFavorite={favorites.toggleFavorite}
           onSelect={setSelectedMetal}
         />
       </Panel>
@@ -137,6 +159,8 @@ export default function MarketPage({ updatedAt }: MarketPageProps) {
           metal={selectedMetal}
           initialPeriod={period}
           updatedAt={updatedAt}
+          isFavorite={favorites.isFavorite(selectedMetal.id)}
+          onToggleFavorite={() => favorites.toggleFavorite(selectedMetal.id)}
           onClose={() => setSelectedMetal(null)}
         />
       )}

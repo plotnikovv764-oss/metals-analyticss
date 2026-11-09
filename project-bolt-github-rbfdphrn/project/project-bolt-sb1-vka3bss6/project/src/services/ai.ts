@@ -1,4 +1,4 @@
-import { METALS, METAL_MAP } from '@/data/metals';
+import { METALS } from '@/data/metals';
 import { buildQuotes } from '@/services/market';
 import type { MetalQuote } from '@/types/market';
 
@@ -41,13 +41,13 @@ export function buildDemoReply(question: string, updatedAt: Date): AiResponse {
 
   if (mentioned.length === 0) {
     return {
-      text: 'Демо-режим: ИИ-модель не подключена. Назовите металл (например, Медь, Copper, Cu, Золото, Неодим), и я покажу его демонстрационную котировку за месяц.',
+      text: 'Демо-режим: ИИ-аналитика пока не подключена, поэтому ваш вопрос не анализируется. Назовите металл (например, Neodymium, Nd или неодим), и я покажу его демонстрационную котировку за месяц.',
       quotes: [],
     };
   }
 
   return {
-    text: 'Демо-режим: ниже демонстрационные котировки за 1 месяц по упомянутым металлам. Это не аналитический вывод ИИ — реальные ответы появятся после подключения языковой модели через API.',
+    text: 'Демо-режим: ниже демонстрационные котировки за 1 месяц по упомянутым металлам. Это не аналитический вывод ИИ.',
     quotes: mentioned.map((metal) => buildQuotes([metal], '1M', updatedAt)[0]),
   };
 }
